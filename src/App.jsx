@@ -12,6 +12,7 @@ import './desktop.css'
 import './blue-world.css'
 import './scenery.css'
 import Coin from './Coin'
+import Account from './Account'
 import {motion,useReducedMotion} from 'framer-motion'
 
 function Doodle({variant=0}){const art=[
@@ -60,7 +61,7 @@ export default function App(){
  function openDetail(id){setDetailId(id);go('detail')}
  const step=screenSteps[view]
  const score=draft&&['result','final','coin'].includes(view)?scoreDecision(draft):null
- return <>{!step&&<header className="app-header"><button className="brand" onClick={()=>go('home')}><span className="brand-mark"><Guide/></span>Decision Sprint</button><nav className="desktop-navigation" aria-label="Main navigation">{['home','atlas','patterns'].map(v=><button key={v} aria-current={view===v?'page':undefined} onClick={()=>go(v)}>{v[0].toUpperCase()+v.slice(1)}</button>)}</nav><details className="device-menu"><summary aria-label="Device and storage information"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg><span>Your space</span></summary><div><strong>Just on this device</strong><p>Your decisions are saved in this browser. No account needed.</p><span>{decisions.length} saved decisions</span></div></details></header>}
+ return <>{!step&&<header className="app-header"><button className="brand" onClick={()=>go('home')}><span className="brand-mark"><Guide/></span>Decision Sprint</button><nav className="desktop-navigation" aria-label="Main navigation">{['home','atlas','patterns'].map(v=><button key={v} aria-current={view===v?'page':undefined} onClick={()=>go(v)}>{v[0].toUpperCase()+v.slice(1)}</button>)}</nav><Account/></header>}
  <motion.main initial={reduced?false:{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{type:"spring",stiffness:220,damping:22}} key={view} className={view==='home'?'home-page':`flow-page view-${view}`}>
  {storageError&&<p className="error" role="alert">{storageError}</p>}
  {view==='home'&&<Home decisions={decisions} draft={draft} onStart={start} onOpen={openDetail} onNavigate={go} onResume={()=>go(draft.category?'options':'category')} onCategory={c=>{const d=newDecision();d.category=c;setDraft(d);setCustom('');setCustomOpen(false);go('options')}} onExample={i=>{const d=newDecision(true);if(i){d.category=i===1?'Food':'Shopping';d.options=d.options.map((o,n)=>({...o,label:(i===1?['Cook at home','Eat out']:['Buy it now','Wait a month'])[n]}));d.selected_criteria=criteriaByCategory[d.category].slice(0,3)}setDraft(d);setCriterionIndex(0);setCustom('');setCustomOpen(false);go('criteria')}}/>}

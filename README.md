@@ -33,9 +33,9 @@ Scoring uses rank weights 3, 2, and 1. Each option’s score is the weighted sum
 
 Completed decisions are stored under `decision-sprint:completed:v1` in localStorage with IDs, timestamps, category, options, selected criteria and ranks, raw ratings, normalized option scores, recommendation, coin-flip state and reaction, final choice, and duration. My Patterns computes counts, averages, tie-breaker rate, reactions, category and priority frequencies, and recommendation follow rate directly from those records.
 
-There is no account, cloud database, payment, LLM API, chatbot, personality analysis, or fabricated pattern data. The coin animation and the example are UI conveniences; scoring, history, and pattern calculations are real local logic.
+Supabase provides optional email/password accounts. There is no cloud storage for decisions, payment, LLM API, chatbot, personality analysis, or fabricated pattern data. The coin animation and the example are UI conveniences; scoring, history, and pattern calculations are real local logic.
 
-No accounts, cloud database, payments, personality test, compatibility scoring, or long-term profiling.
+No decision database, payments, personality test, compatibility scoring, or long-term profiling.
 
 ## Validation
 
@@ -91,3 +91,11 @@ wayfinding objects and contextual companions. Insight detail uses a field-notebo
 treatment and an actual supporting-record proportion ring. Home adds illustrated
 category pebbles, cloud/hill layers, alternating thoughts and a river-shaped
 example ribbon. Reduced-motion preferences disable decorative movement.
+
+## Email/password accounts
+
+Copy `.env.example` to `.env.local` and provide the project URL and browser-safe publishable key. Never use a secret or service-role key in a `VITE_` variable. GitHub Pages builds read the same names from GitHub repository Actions variables.
+
+The header account dialog supports registration with matching passwords (minimum 8 characters), email confirmation when required by Supabase, password login, persisted sessions, and logout on this device. Passwords are not stored by application code. Supabase manages authentication sessions separately from the existing decision storage key.
+
+Decision records remain in localStorage, shared within the same browser origin regardless of which account is logged in. Login does not upload, migrate, isolate, or clear those records. No expenses or other application tables are created.

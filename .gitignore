@@ -11,6 +11,7 @@ node_modules
 .pnpm-store/
 .env
 .env.*
+!.env.example
 dist
 dist-ssr
 *.local

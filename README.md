@@ -101,3 +101,12 @@ The header account dialog supports registration with matching passwords (minimum
 Decision records use the existing protected `public.decisions` table. The client only performs SELECT, INSERT and DELETE with an owner filter; RLS enforces ownership. No UPDATE/upsert or schema changes are required. Frontend configuration uses only the project URL and publishable key.
 
 Migration binds the legacy snapshot to the first signed-in owner before writing. Each record keeps its UUID; retries accept an existing record only when all persisted fields match. Failure retains the browser copy. The unchanged legacy snapshot is removed only after every cloud write is verified. An ownership marker remains to prevent another account importing leftovers. Logout clears account records from React state; drafts remain in memory only. Derived scores and patterns are recalculated from stored ratings using scoring version 1.
+
+
+## Atlas coverage and Patterns evidence
+
+Atlas is a coverage map with milestones at 5 (Decision Landscape) and 10 (Decision Dimensions). Category islands retain record previews; recorded dimension nodes link to Patterns analysis. Mobile uses a vertical discovery route.
+
+Patterns uses reusable selectors in decisionInsights.js. Fewer than three supporting records are suppressed; sample sizes of 3–4 are emerging, while consistent frequency labels require at least ten observations and 80% support. Comparative signals require at least three records in each cohort and never receive an automatic consistency label. Tied highest-scored options all count as a comparison match. Close scores have a top-two gap of at most ten points out of 100. Priority filtering selects observations without reducing their evidence denominator. Reaction evidence uses coin-flip records as the denominator and only the matching reaction as supporting records.
+
+Confidence and later outcomes are not collected and are never inferred from a coin reaction. No database changes or analytics dependency were added.

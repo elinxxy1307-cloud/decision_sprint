@@ -19,11 +19,11 @@ Public site: https://elinxxy1307-cloud.github.io/decision_sprint/
 
 Production builds use `/decision_sprint/` as the Vite base path. Run `pnpm build` and `pnpm preview`, then open http://localhost:4173/decision_sprint/ to check the production build locally.
 
-Completed decisions remain in the visitor's browser localStorage. The public site has separate storage from localhost; local history is not uploaded or migrated.
+Completed decisions are saved in Supabase public.decisions for the signed-in owner. Each browser origin migrates its legacy history on first authenticated use; verified writes precede removal of the unchanged local snapshot.
 
 ## Flow
 
-Start a Decision → category → options → choose and rank three priorities in the Top 3 area → rate options one priority at a time → weighted recommendation → optional coin flip → reaction → user-selected final choice → save locally.
+Start a Decision → category → options → choose and rank three priorities in the Top 3 area → rate options one priority at a time → weighted recommendation → optional coin flip → reaction → user-selected final choice → save to your account.
 
 The app also includes Recent Decisions, detail views, and My Patterns after five completed decisions. The first load has no fabricated history; “Try an example” only fills an unsaved draft.
 
@@ -31,11 +31,11 @@ The app also includes Recent Decisions, detail views, and My Patterns after five
 
 Scoring uses rank weights 3, 2, and 1. Each option’s score is the weighted sum divided by the maximum 30 and rounded to 0–100. Ties are shown explicitly, while the user still chooses the final option.
 
-Completed decisions are stored under `decision-sprint:completed:v1` in localStorage with IDs, timestamps, category, options, selected criteria and ranks, raw ratings, normalized option scores, recommendation, coin-flip state and reaction, final choice, and duration. My Patterns computes counts, averages, tie-breaker rate, reactions, category and priority frequencies, and recommendation follow rate directly from those records.
+Legacy decisions were stored under `decision-sprint:completed:v1` in localStorage with IDs, timestamps, category, options, selected criteria and ranks, raw ratings, normalized option scores, recommendation, coin-flip state and reaction, final choice, and duration. My Patterns computes counts, averages, tie-breaker rate, reactions, category and priority frequencies, and recommendation follow rate directly from those records.
 
-Supabase provides optional email/password accounts. There is no cloud storage for decisions, payment, LLM API, chatbot, personality analysis, or fabricated pattern data. The coin animation and the example are UI conveniences; scoring, history, and pattern calculations are real local logic.
+Supabase provides email/password accounts and private decision storage. There is no payment, LLM API, chatbot, personality analysis, or fabricated pattern data. The coin animation and the example are UI conveniences; scoring, history, and pattern calculations are real local logic.
 
-No decision database, payments, personality test, compatibility scoring, or long-term profiling.
+No payments, personality test, compatibility scoring, or long-term profiling.
 
 ## Validation
 
@@ -53,7 +53,7 @@ Category, priority, and coin-reaction filters highlight actual matching records;
 node and metric details open in keyboard-accessible native dialog sheets.
 
 The bento summaries derive pace, category shares, priority frequencies, tie-breaker
-usage and recommendation follow rate from local history. Home's weekly count uses
+usage and recommendation follow rate from the signed-in account’s history. Home's weekly count uses
 the local Monday boundary. There are no synthetic metric values. The map positions
 are illustrative, not geographic or psychological distances. The forked-path
 companion is an inline SVG with contextual expressions and accessories.
@@ -98,4 +98,6 @@ Copy `.env.example` to `.env.local` and provide the project URL and browser-safe
 
 The header account dialog supports registration with matching passwords (minimum 8 characters), email confirmation when required by Supabase, password login, persisted sessions, and logout on this device. Passwords are not stored by application code. Supabase manages authentication sessions separately from the existing decision storage key.
 
-Decision records remain in localStorage, shared within the same browser origin regardless of which account is logged in. Login does not upload, migrate, isolate, or clear those records. No expenses or other application tables are created.
+Decision records use the existing protected `public.decisions` table. The client only performs SELECT, INSERT and DELETE with an owner filter; RLS enforces ownership. No UPDATE/upsert or schema changes are required. Frontend configuration uses only the project URL and publishable key.
+
+Migration binds the legacy snapshot to the first signed-in owner before writing. Each record keeps its UUID; retries accept an existing record only when all persisted fields match. Failure retains the browser copy. The unchanged legacy snapshot is removed only after every cloud write is verified. An ownership marker remains to prevent another account importing leftovers. Logout clears account records from React state; drafts remain in memory only. Derived scores and patterns are recalculated from stored ratings using scoring version 1.

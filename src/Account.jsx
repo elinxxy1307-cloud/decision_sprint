@@ -1,13 +1,13 @@
-import {useEffect, useRef, useState} from 'react'
+import {useRef, useState} from 'react'
 import {supabase} from './supabase'
 import {authError, validateCredentials} from './authValidation'
 import './account.css'
+import {useAuth} from './authState'
 
 export default function Account() {
   const dialog = useRef(null)
   const submitting = useRef(false)
-  const [session, setSession] = useState(null)
-  const [ready, setReady] = useState(!supabase)
+  const {session,ready} = useAuth()
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -15,22 +15,6 @@ export default function Account() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-
-  useEffect(() => {
-    if (!supabase) return
-    let active = true
-    let eventReceived = false
-    const {data: {subscription}} = supabase.auth.onAuthStateChange((_event, next) => {
-      eventReceived = true
-      if (active) {setSession(next); setReady(true)}
-    })
-    supabase.auth.getSession().then(({data, error: failure}) => {
-      if (!active || eventReceived) return
-      setSession(data.session); setReady(true)
-      if (failure) setError(authError(failure))
-    }).catch(() => {if (active) {setReady(true); setError('Unable to restore your session. Please log in again.')}})
-    return () => {active = false; subscription.unsubscribe()}
-  }, [])
 
   function clearPasswords() {setPassword(''); setConfirmation('')}
   function changeMode(next) {setMode(next); setError(''); setNotice(''); clearPasswords()}
@@ -48,7 +32,7 @@ export default function Account() {
         : await supabase.auth.signInWithPassword(credentials)
       if (failure) {setError(authError(failure)); return}
       clearPasswords()
-      if (data.session) {setSession(data.session); setNotice(mode === 'signup' ? 'Your account is ready.' : 'You’re logged in.')}
+      if (data.session) {setNotice(mode === 'signup' ? 'Your account is ready.' : 'You’re logged in.')}
       else setNotice('Check your email for a confirmation link, then return here to log in. If you already have an account, log in instead.')
     } catch {setError('Unable to connect. Please try again.')} finally {setBusy(false); submitting.current = false}
   }
@@ -58,7 +42,7 @@ export default function Account() {
     try {
       const {error: failure} = await supabase.auth.signOut({scope: 'local'})
       if (failure) {setError(authError(failure)); return}
-      setSession(null); clearPasswords(); setMode('login'); setNotice('You’re logged out. Your local decisions are still here.')
+      clearPasswords(); setMode('login'); setNotice('You’re logged out. Your decisions are saved securely in your account.')
     } catch {setError('Unable to log out. Please try again.')} finally {setBusy(false); submitting.current = false}
   }
   return <>
@@ -67,7 +51,7 @@ export default function Account() {
       <button className="account-close" aria-label="Close account" disabled={busy} onClick={() => dialog.current.close()}>×</button>
       <span className="eyebrow">YOUR SPACE</span>
       <h2 id="account-title">{session ? 'You’re signed in.' : mode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>
-      <p className="account-local">Decisions stay in this browser. Accounts don’t sync or separate your local history yet.</p>
+      <p className="account-local">Your decisions are private to your account and available across devices.</p>
       {!supabase && <p role="status">Account access is being set up. You can keep using Decision Sprint without an account.</p>}
       {!ready ? <p role="status">Checking your session…</p> : session ? <><p className="account-email">{session.user.email}</p><button className="primary" onClick={logout} disabled={busy}>{busy ? 'Logging out…' : 'Log out'}</button></> : <form onSubmit={submit}>
         <fieldset disabled={busy}>

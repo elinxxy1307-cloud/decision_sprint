@@ -1,0 +1,11 @@
+import {test} from 'node:test'
+import assert from 'node:assert/strict'
+import {newDecision,completeDecision,STORAGE_KEY} from '../src/decision.js'
+import {toRow,fromRow,sameRow,migrateLegacy,MIGRATION_OWNER} from '../src/decisionCloud.js'
+function fixture(){const d=newDecision(true);for(const c of d.selected_criteria)d.scores[c]=Object.fromEntries(d.options.map(o=>[o.id,3]));d.final_choice=d.options[0].id;return completeDecision(d)}
+function storage(d){const m=new Map([[STORAGE_KEY,JSON.stringify([d])]]);return {getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)}}
+test('cloud mapping preserves original intent, rankings, scores and coin feedback',()=>{const d=fixture();d.used_coin_flip=true;d.coin_flip_result=d.options[1].id;d.coin_flip_reaction='Disappointed';const row=toRow(d,'owner');const back=fromRow(row);assert.deepEqual(back.option_scores,d.option_scores);assert.equal(back.coin_flip_reaction,d.coin_flip_reaction);assert.equal(sameRow(row,toRow(back,'owner')),true);assert.equal('recommended_option' in row,false)})
+test('failed migration retains browser originals and account binding',async()=>{const d=fixture(),s=storage(d);await assert.rejects(migrateLegacy(s,'a',{insert:async()=>{throw Error('offline')}}));assert.ok(s.getItem(STORAGE_KEY));assert.equal(s.getItem(MIGRATION_OWNER),'a');let called=false;await migrateLegacy(s,'b',{insert:async()=>{called=true}});assert.equal(called,false)})
+test('only verified successful migration removes the browser copy',async()=>{const d=fixture(),s=storage(d);let calls=0;await migrateLegacy(s,'a',{insert:async()=>{assert.ok(s.getItem(STORAGE_KEY));calls++}});assert.equal(calls,1);assert.equal(s.getItem(STORAGE_KEY),null);await migrateLegacy(s,'a',{insert:async()=>{calls++}});assert.equal(calls,1)})
+test('migration retains a browser snapshot changed by another tab',async()=>{const d=fixture(),s=storage(d);await migrateLegacy(s,'a',{insert:async()=>s.setItem(STORAGE_KEY,JSON.stringify([d,fixture()]))});assert.equal(JSON.parse(s.getItem(STORAGE_KEY)).length,2)})
+test('cloud verification detects differences but ignores JSON ordering and timezone formatting',()=>{const r=toRow(fixture(),'a');assert.equal(sameRow(r,{...r,created_at:new Date(r.created_at).toISOString().replace('Z','+00:00')}),true);assert.equal(sameRow(r,{...r,owner_id:'b'}),false)})

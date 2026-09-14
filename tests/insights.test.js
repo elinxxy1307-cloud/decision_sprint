@@ -15,7 +15,7 @@ test('coverage milestones and singular remaining copy use only 5 and 10',()=>{
 })
 test('coverage never invents confidence or outcomes, category links use actual priorities',()=>{
  const c=coverage([fixture()]);assert.equal(c.explored.length,1);assert.equal(c.unexplored.length,5)
- assert.deepEqual(c.dimensions.filter(d=>['Confidence','Outcomes'].includes(d.name)).map(d=>[d.count,d.state]),[[0,'Not collected'],[0,'Not collected']])
+ assert.deepEqual(c.dimensions.map(d=>d.name),['Values','Trade-offs','Decision speed','Decision method','First reactions'])
  assert.deepEqual(c.explored[0].criteria,['Cost','Time','Enjoyment'])
 })
 test('small samples suppressed, emerging and consistent labels require evidence',()=>{
